@@ -22,16 +22,7 @@ def show_api_error(action: str, error: Exception) -> None:
     st.error(f"{action} failed. Please try again.")
     st.caption(f"{type(error).__name__}: {error}")
 
-# Sidebar — shared params
-with st.sidebar:
-    st.header("⚙️ Parameters")
-    temperature = st.slider("Temperature", 0.0, 2.0, 0.7, 0.1)
-    top_p       = st.slider("Top-p", 0.0, 1.0, 0.9, 0.05)
-    max_tokens  = st.slider("Max tokens", 64, 1024, 256, 64)
-    st.divider()
-    if st.button("🗑️ Clear chat history"):
-        st.session_state.history = []
-        st.rerun()
+# (Parameters removed from global UI — per-tab controls are used instead)
 
 # ---------------------------------------------------------------------------
 # Tabs
@@ -94,6 +85,19 @@ with tab_single:
 with tab_chat:
     st.subheader("Streaming Chatbot (GPT-4o · short-term memory in RAM)")
 
+    # Chat-specific controls (local params and clear history)
+    col_t, col_p, col_m, col_btn = st.columns([1, 1, 1, 1])
+    with col_t:
+        chat_temperature = st.slider("Temperature", 0.0, 2.0, 0.7, 0.1, key="chat_temperature")
+    with col_p:
+        chat_top_p = st.slider("Top-p", 0.0, 1.0, 0.9, 0.05, key="chat_top_p")
+    with col_m:
+        chat_max_tokens = st.slider("Max tokens", 64, 1024, 256, 64, key="chat_max_tokens")
+    with col_btn:
+        if st.button("🗑️ Clear chat history", key="clear_chat"):
+            st.session_state.history = []
+            st.rerun()
+
     if "history" not in st.session_state:
         st.session_state.history = []   # simple array — short-term memory
 
@@ -105,21 +109,21 @@ with tab_chat:
         st.session_state.history.append({"role": "user", "content": prompt})
         st.chat_message("user").write(prompt)
 
+        # perform streaming call immediately in the same run (no rerun)
         try:
             client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-            with st.chat_message("assistant"):
-                stream = client.chat.completions.create(
-                    model=OPENAI_MODEL,
-                    messages=st.session_state.history,
-                    temperature=temperature,
-                    top_p=top_p,
-                    max_tokens=max_tokens,
-                    stream=True,
-                )
-                response = st.write_stream(stream)
+            stream = client.chat.completions.create(
+                model=OPENAI_MODEL,
+                messages=st.session_state.history,
+                temperature=chat_temperature,
+                top_p=chat_top_p,
+                max_tokens=chat_max_tokens,
+                stream=True,
+            )
+            response = st.write_stream(stream)
 
             st.session_state.history.append({"role": "assistant", "content": response})
-            # Giữ 3 lượt gần nhất (6 messages)
+            # Keep last 3 turns (6 messages)
             st.session_state.history = st.session_state.history[-6:]
         except Exception as error:
             show_api_error("Chat streaming", error)
