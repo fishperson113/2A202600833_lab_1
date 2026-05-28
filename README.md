@@ -119,9 +119,33 @@ Tất cả kiểm thử dùng `unittest.mock` — **không cần API key thật*
 | 1:00–1:30 | Mở rộng: Hoàn thành Phần 2 của `exercises.md` |
 
 
+## Bonus: Streamlit Chatbot UI
+
+Ngoài các nhiệm vụ chính, project có thêm giao diện web bằng **Streamlit** để thử nhanh các hàm trong `template.py`.
+
+### Những gì đã làm
+- **Single Call**: chọn model bằng dropdown giữa `GPT-4o` và `GPT-4o-mini`, rồi gọi trực tiếp `call_openai` hoặc `call_openai_mini`
+- **Streaming Chat**: chat realtime với `st.write_stream()` và giữ short-term memory trong `st.session_state`
+- **Compare Models**: so sánh `GPT-4o` và `GPT-4o-mini` bằng `compare_models`
+- **Batch Compare**: chạy nhiều prompt cùng lúc bằng `batch_compare` và hiển thị cả bảng `DataFrame` lẫn text table
+- **Error handling**: bắt lỗi API và hiển thị thông báo ngắn gọn thay vì traceback hệ thống
+
+### Chạy giao diện
+
+```bash
+pip install -r requirements.txt
+streamlit run app.py
+```
+
+Truy cập `http://localhost:8501` trên trình duyệt. Cần đặt `OPENAI_API_KEY` nếu muốn chạy thật.
+
+
+
+---
 
 ## Danh Sách Kiểm Tra Nộp Bài
 
 - [ ] `pytest tests/ -v` — tất cả kiểm thử pass
 - [ ] `solution/exercises.md` — tất cả câu trả lời đã điền
 - [ ] `solution/solution.py` — triển khai cuối cùng của bạn
+- [ ] `app.py` — giao diện Streamlit đã được bổ sung đầy đủ
